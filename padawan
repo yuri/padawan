@@ -1,0 +1,120 @@
+#!/usr/bin/python
+
+from padawan import *
+
+#import cgitb
+#cgitb.enable()
+
+ERROR_TEMPLATE = """Content-Type: text/html;charset=utf-8
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ <title>An error</title>
+ <style type="text/css"> 
+   body { max-width: 900px; padding: 80px; border: 3px solid #fdd;}
+   h1, h2 {color: #b99}
+   p.error {color:red; font-weight:bold; font-size: 14pt;}
+   pre { padding: 2em; border: 1px solid gray }
+ </style>
+
+ <center>
+  <img src="/yoda-tux.png"/>
+  <h1>Patience, young Jedi!</h1>
+  <p>Something went wrong with your script. Let's figure out why.</p>
+ </center>
+
+"""
+
+
+import os, sys
+script = os.environ['SCRIPT_FILENAME']
+
+original_stdout = sys.stdout
+import StringIO
+fake_stdout = StringIO.StringIO()
+
+def report_error(error_type, e, msg, filename, lineno, linetext, tb) :
+    sys.stdout = original_stdout
+    print ERROR_TEMPLATE
+
+    print "<h2>The Problem</h2>"
+    print "<p class='error'>", str(e), "</p>"
+
+    print "<h2>Where</h2>"    
+    print "<p><b>File name:</b> ", filename, "</p>"
+    print "<p><b>Line number:</b> ", lineno, "</p>"
+    print "<p><b>Line contents:</b></p>"
+
+    if linetext :
+       print "<pre><code>"+linetext+"</code></pre>"
+    else :
+       print "<p>Not available</p>"
+
+    print "<h2>The Stack Trace</h2>"
+    if tb :
+        print "<pre><code>"+tb+"</code></pre>"
+    else :
+        print "<p>The stack trace is not available.</p>"
+
+    print "<h2>What Happened Before</h2>"
+
+    output = fake_stdout.getvalue()
+    if len(output) > 0 :
+        print "<p>Here is what your script produced before it died.</p>"
+        print "<pre><code>"+cgi.escape(output)+"</code></pre>"
+    else :
+        print "<p>Your script did not produce any output before it run into this problem.</p>"
+
+try :
+   sys.stdout = fake_stdout
+   wrapper_exception = False
+   execfile(script)
+   sys.stdout=original_stdout
+   output = fake_stdout.getvalue()
+   headers = output.split("\n\n")[0].split("\n")
+   content_type_found = False
+   for header in headers:
+      if header.split(":")[0].lower().strip() == "content-type" :
+          content_type_found = True
+   wrapper_exception = True
+   assert content_type_found, "Your script did not set a Content-Type header."
+   print output
+
+except SyntaxError as e :
+    report_error("syntax", e, str(e), e.filename, e.lineno,
+                 None, None)
+
+except Exception as e :
+    import sys, traceback
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    tb = traceback.extract_tb(exc_traceback)
+    filename, lineno, fnname, linetext = tb[-1]
+
+    if wrapper_exception :
+       tb = []
+       filename = script
+       lineno = "Not available"
+       linetext = None
+
+    if linetext and linetext.strip().startswith("raise PadawanError") :
+        new_tb = []
+        for filename, lineno, fnname, linetext in tb :
+           if not filename.split("/")[-1] == "padawan.py" :
+              new_tb.append((filename, lineno, fnname, linetext))
+        tb = new_tb
+
+    tb_buffer = ""
+
+    tb = tb[1:] # chop off the wrapper
+
+    for filename, lineno, fnname, linetext in tb :
+        
+        tb_buffer += "Line %d in %s:\n" % (lineno, filename)
+        tb_buffer += "    " + linetext + "\n" 
+
+    #traceback.print_tb(exc_traceback, file=sys.stdout)
+
+    report_error("generic", e, str(e), filename, lineno, linetext, tb_buffer)
+
