@@ -1,0 +1,8 @@
+
+The Yoda image (yoda-tux.png) is (c) 2006 Wyvern (Browse Tux) and is distributed
+under Creative Commons BY-NC-SA. Origina image source:
+
+http://tux.crystalxp.net/en.id.2023-wyvern-yoda-tux.html
+
+
+Everything else is (c) Yuri Takhteyev (2011) and distributed under MIT/X license.
