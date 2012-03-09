@@ -12,10 +12,10 @@ Padawan assumes use of CGI and MySQL, via Python's cgi and MySQLdb modules.
 
 There are two main files: padawan.py and padawan. Each is described below.
 
-## padawan.py
+## padawan.py (a Python module)
 
-**padawan.py** provides a wrapper for those two modules, adding the following
-features:
+**padawan.py** is a python module that serves as a wrapper around Python's cgi
+and MySQLdb modules, adding the following features:
 
 * Code can be written using just a subset of Python. In particular,
   the application can avoid use of methods (using only functions instead),
@@ -25,7 +25,7 @@ features:
 * Values can be retrieved by field names rather than field positions.
 * Additional functions are provided.
 
-## padawan
+## padawan (a CGI wrapper)
 
 **padawan** is a wrapper around the python executable that provides an additional
 level of support, aiming to avoid "Internal Server Error" Messages.
