@@ -36,7 +36,13 @@ import StringIO
 fake_stdout = StringIO.StringIO()
 
 def report_error(error_type, e, msg, filename, lineno, linetext, tb) :
+
     sys.stdout = original_stdout
+
+    if error_type == "exit" :
+        print fake_stdout.getvalue()
+        return
+
     print ERROR_TEMPLATE
 
     print "<h2>The Problem</h2>"
@@ -82,6 +88,10 @@ try :
    assert content_type_found, "Your script did not set a Content-Type header."
    print output
 
+except PadawanExit as e :
+    report_error("exit", None, None, None, None,
+                 None, None)
+                 
 except SyntaxError as e :
     report_error("syntax", e, str(e), e.filename, e.lineno,
                  None, None)

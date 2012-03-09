@@ -7,6 +7,9 @@ import sys
 
 class PadawanError (Exception) :
     pass
+    
+class PadawanExit (Exception) :
+    pass    
 
 def insist(test, message) :
     """ A replacement for assert."""
@@ -157,4 +160,7 @@ def get_row_value(row, field) :
 def fill_template(*args) :
    global padawan
    return padawan.fill_template(*args)
+
+def exit() :
+   raise PadawanExit
 
